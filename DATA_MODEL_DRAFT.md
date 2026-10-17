@@ -6,9 +6,11 @@ This is a discussion draft for the first backend phase. It describes concepts an
 
 ```mermaid
 erDiagram
-    USER ||--o{ RECORD : owns
-    USER ||--o{ NOTE : writes
+    USER ||--o{ DAILY_DIARY : owns
+    DAILY_DIARY ||--o{ RECORD : contains
+    DAILY_DIARY ||--o{ NOTE : contains
     RECORD ||--o{ CONVERSATION_ENTRY : contains
+    RECORD o|--o{ NOTE : optionally_links
 ```
 
 **Confirmed:** one record represents exactly one saved AI conversation. A user can own many records, and each record contains that conversation's entries in order.
@@ -18,6 +20,10 @@ erDiagram
 **Confirmed:** personal notes are private to their owner. Other user accounts cannot view or change them.
 
 **Confirmed:** records and notes enter a recycle bin when deleted and are permanently removed three days later.
+
+**Confirmed:** each user has at most one diary for a calendar day. That daily diary can contain multiple conversation records and multiple notes. A note may be linked to one conversation or remain unlinked. An unlinked note still belongs to its day's diary; no placeholder conversation is needed.
+
+**Confirmed:** the daily diary includes one AI-written combined entry drawn from that day's conversations and notes. The user may edit the displayed daily entry while the original AI version is preserved. The complete conversations and notes remain available separately; a “Read more” control may expand long content in the interface without shortening the stored text.
 
 ## First-release conversation flow
 
@@ -40,23 +46,41 @@ The person who owns private diary content.
 | `password_hash` | Password verification without storing the password | Confirmed |
 | `display_name` | Name shown in the app | Optional |
 | `created_at` | Account creation time | Proposed |
+| `time_zone` | Determines the user's local diary date | Proposed |
 
 Authentication credentials should be handled separately from diary content. Email and password sign-in is confirmed. Email OTP may be added within a free sending allowance; its exact role (email verification, sign-in, or second factor) is still open.
 
+### Daily diary
+
+The one diary belonging to a user for a calendar day. It groups all of that day's conversations and notes and has one AI-written combined entry. A unique constraint on `user_id` and `diary_date` prevents duplicate diaries for the same day.
+
+| Candidate field | Purpose | Status |
+| --- | --- | --- |
+| `id` | Stable daily-diary identity | Proposed |
+| `user_id` | Owner | Confirmed concept |
+| `diary_date` | The day in the user's chosen time zone | Confirmed concept; time zone choice open |
+| `ai_combined_entry` | Original AI-written daily entry based on that day's conversations and notes | Confirmed concept |
+| `edited_combined_entry` | User-edited version, if changed | Confirmed concept |
+| `combined_entry_generated_at`, `combined_entry_edited_at` | Generation and last edit times | Proposed |
+| `created_at`, `updated_at` | When the daily diary was created and changed | Proposed |
+
+The combined entry adds a readable account of the day; it does not replace the source conversations or notes. When it is first generated and whether later additions regenerate it are open decisions.
+
 ### Record
 
-One saved AI conversation, owned by one user.
+One saved AI conversation belonging to one daily diary, and therefore owned by that diary's user.
 
 | Candidate field | Purpose | Status |
 | --- | --- | --- |
 | `id` | Stable record identity | Proposed |
-| `user_id` | Owner | Proposed |
+| `diary_id` | Parent daily diary | Confirmed concept |
 | `title` | User-facing label | Proposed |
 | `status` | In progress, complete, or in recycle bin | Confirmed concept |
 | `source` | Origin; first-release conversations start in this app | Optional |
 | `started_at` | When the interaction began | Proposed |
 | `ended_at` | When the conversation actually ended | Proposed |
-| `summary` | AI-generated summary, editable by the user | Confirmed concept |
+| `ai_summary` | Original AI-generated summary, preserved after user edits | Confirmed concept |
+| `edited_summary` | User-edited version, if changed | Confirmed concept |
 | `summary_generated_at`, `summary_updated_at` | Summary creation and last edit times | Proposed |
 | `deleted_at` | When moved to recycle bin; permanent purge follows after three days | Confirmed concept |
 | `created_at`, `updated_at` | When the record was saved and changed | Proposed |
@@ -85,8 +109,8 @@ A standalone text entry written by a user, separate from AI conversation records
 | Candidate field | Purpose | Status |
 | --- | --- | --- |
 | `id` | Stable note identity | Proposed |
-| `user_id` | Owner | Proposed |
-| `record_id` | Optional link to one conversation record | Proposed |
+| `diary_id` | Parent daily diary and route to its owner | Confirmed concept |
+| `record_id` | Optional link to one conversation record; empty means unlinked | Confirmed concept |
 | `title` | Optional label | Optional |
 | `content` | Primarily manually entered, user-written note text | Confirmed concept |
 | `deleted_at` | When moved to recycle bin; permanent purge follows after three days | Confirmed concept |
@@ -100,6 +124,11 @@ A standalone text entry written by a user, separate from AI conversation records
 - Define how the app distinguishes an ended conversation from a pause.
 - Define how to resume an interrupted in-progress record.
 - Decide whether deleting a record also removes its entries and what happens to linked notes, reviews, and social drafts when the three-day recycle-bin period ends.
+- Preserve notes when a linked conversation is permanently deleted; clear the link so those notes become unlinked.
+- Define whether a note can link to a conversation from another diary day.
+- Define the user's time zone, and whether a conversation crossing midnight belongs to its start day or end day.
+- Decide whether an empty daily diary is created each day or created when the first conversation or note arrives.
+- Decide when the combined entry is first generated and how it is updated when another conversation or note is added that day.
 - Define whether the 30-day review uses original conversation times, save times, or both.
 - Define how to handle missing provider, model, and timestamp information if import is added later.
 - Define the role of email OTP if a free sending service is selected.

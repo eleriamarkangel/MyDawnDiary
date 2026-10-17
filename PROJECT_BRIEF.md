@@ -8,6 +8,9 @@
 
 Create a full-stack application called **MyDawnDiary** that records a person's conversations with AI models, lets them post selected content to social media, and provides a review of their personality and activity over the past 30 days.
 
+Each user has one diary per calendar day. That diary groups multiple AI conversations and notes. A note may link to a conversation or remain unlinked within the day's diary.
+The diary also includes one AI-written combined entry based on that day's conversations and notes. Users may edit this daily entry while the original AI version and full source items remain available for review.
+
 This document captures the starting idea. The product behavior, data boundaries, and implementation will be decided together one topic at a time. No solution is selected yet.
 
 ## Initial deployment scope

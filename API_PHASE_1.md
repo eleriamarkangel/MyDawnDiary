@@ -5,9 +5,10 @@ This is a planning draft for the first backend phase. No endpoints, database sch
 ## Working resource model
 
 - **User account:** owns private diary data.
+- **Daily diary:** the user's single diary for a calendar day, containing that day's conversations and notes.
 - **Record:** one saved AI conversation started inside the app by a user in the first release.
 - **Conversation entry:** a message or turn belonging to a record, with its speaker and order preserved.
-- **Note:** a standalone, user-written text entry that does not require a conversation record.
+- **Note:** a user-written text entry in a daily diary, optionally linked to a conversation. An unlinked note does not require a conversation record.
 
 The one-record-to-one-conversation relationship is confirmed. Endpoint and table names remain open.
 
@@ -22,7 +23,15 @@ The one-record-to-one-conversation relationship is confirmed. Endpoint and table
 - Define how account deletion affects owned records and conversation entries.
 - Ensure every private-data operation checks the signed-in user's ownership.
 
-### 2. Records API
+### 2. Daily diary API
+
+- Get or create the signed-in user's diary for a local calendar day without creating duplicates.
+- List diary days and show the conversations and notes belonging to one day.
+- Generate and read one AI-written combined entry from that day's conversations and notes, while keeping the source items available separately.
+- Let the owner edit the combined entry while preserving the original AI-written version.
+- Define when to generate or refresh that entry as more items arrive during the day.
+
+### 3. Records API
 
 - Create a record for the signed-in user.
 - Autosave an in-progress record and its finalized text entries during the AI conversation.
@@ -33,7 +42,7 @@ The one-record-to-one-conversation relationship is confirmed. Endpoint and table
 - Update a record's editable metadata.
 - Move a deleted record to a recycle bin, allow recovery, and permanently purge it after three days.
 
-### 3. Conversation API
+### 4. Conversation API
 
 - Add a conversation entry to a record.
 - List entries in conversation order.
@@ -44,15 +53,16 @@ The one-record-to-one-conversation relationship is confirmed. Endpoint and table
 - Handle speech-to-text entries and AI responses during the conversation.
 - Define how an interrupted in-progress interaction is resumed.
 
-### 4. Notes API
+### 5. Notes API
 
 - Create a standalone text note for the signed-in user.
-- Support primarily manual note entry after the “Dear Diary” activation and allow an optional link to a conversation record.
+- Support primarily manual note entry after the “Dear Diary” activation and allow an optional link to a conversation record in the daily diary.
+- Keep unlinked notes in that day's diary. If a linked conversation is permanently deleted, retain the note and clear its link.
 - List, read, and update the user's notes.
 - Move a deleted note to a recycle bin, allow recovery, and permanently purge it after three days.
 - Require the signed-in account to own a note before it can be listed, read, updated, or deleted. Other accounts cannot access it.
 
-### 5. Shared API behavior
+### 6. Shared API behavior
 
 - Decide request and response formats, validation rules, error responses, and pagination.
 - Define authentication and authorization rules across all endpoints.
@@ -70,5 +80,7 @@ The one-record-to-one-conversation relationship is confirmed. Endpoint and table
 - Where is the “Dear Diary” phrase detected, and how is accidental activation handled?
 - How does the app distinguish a true conversation ending from a pause?
 - How does the user choose between conversation recording and note creation?
+- Which user time zone defines the diary day, and how is a conversation spanning midnight assigned?
+- When should the combined daily entry be generated or refreshed?
 - What role would an optional free-tier email OTP serve?
 - Which database and Python API framework should be used on the existing server?
