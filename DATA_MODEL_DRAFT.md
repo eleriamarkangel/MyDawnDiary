@@ -1,6 +1,14 @@
 # MyDawnDiary — data model draft
 
-This is a discussion draft for the first backend phase. It describes concepts and relationships, not a finalized database schema. No database or API code has been created.
+This records the agreed core data model for the first backend phase. The initial schema and API code are now in `backend/`; AI and speech integrations remain open.
+
+## Quick guide: notes, conversations, and diaries
+
+- **Note:** Something the user chooses to write down. It can stand alone or be linked to a conversation.
+- **Conversation (record):** One actual talk with AI, by text or voice. Voice becomes a text transcript; raw audio is not saved. One conversation equals one record.
+- **Daily diary:** The single diary for one user on one calendar day. It groups that day's notes and conversations. A day can contain many notes and conversations, but only one daily diary. Later, it will also have one AI-written combined entry about the day.
+
+In short: **notes and conversations are the individual items; the daily diary groups them by day.**
 
 ## Core relationships
 
@@ -11,6 +19,7 @@ erDiagram
     DAILY_DIARY ||--o{ NOTE : contains
     RECORD ||--o{ CONVERSATION_ENTRY : contains
     RECORD o|--o{ NOTE : optionally_links
+    USER ||--o{ SOCIAL_DRAFT : owns
 ```
 
 **Confirmed:** one record represents exactly one saved AI conversation. A user can own many records, and each record contains that conversation's entries in order.
@@ -58,7 +67,7 @@ The one diary belonging to a user for a calendar day. It groups all of that day'
 | --- | --- | --- |
 | `id` | Stable daily-diary identity | Proposed |
 | `user_id` | Owner | Confirmed concept |
-| `diary_date` | The day in the user's chosen time zone | Confirmed concept; time zone choice open |
+| `diary_date` | The day in the account's IANA time zone | Confirmed concept |
 | `ai_combined_entry` | Original AI-written daily entry based on that day's conversations and notes | Confirmed concept |
 | `edited_combined_entry` | User-edited version, if changed | Confirmed concept |
 | `combined_entry_generated_at`, `combined_entry_edited_at` | Generation and last edit times | Proposed |
@@ -125,9 +134,9 @@ A standalone text entry written by a user, separate from AI conversation records
 - Define how to resume an interrupted in-progress record.
 - Decide whether deleting a record also removes its entries and what happens to linked notes, reviews, and social drafts when the three-day recycle-bin period ends.
 - Preserve notes when a linked conversation is permanently deleted; clear the link so those notes become unlinked.
-- Define whether a note can link to a conversation from another diary day.
-- Define the user's time zone, and whether a conversation crossing midnight belongs to its start day or end day.
-- Decide whether an empty daily diary is created each day or created when the first conversation or note arrives.
+- The first API version links a note only to a conversation in the same daily diary.
+- The user chooses an IANA time zone for diary dates. New records and notes may be assigned only to the user's today or yesterday; future dates are disallowed. A conversation crossing midnight remains one record and defaults to its start day, but may be assigned to today or yesterday when completed. Older diaries remain editable.
+- The first API version creates a daily diary when its first conversation or note arrives, avoiding empty stored diary rows.
 - Decide when the combined entry is first generated and how it is updated when another conversation or note is added that day.
 - Define whether the 30-day review uses original conversation times, save times, or both.
 - Define how to handle missing provider, model, and timestamp information if import is added later.
@@ -135,7 +144,9 @@ A standalone text entry written by a user, separate from AI conversation records
 
 ## Later entities
 
-Social post drafts/publications and 30-day reviews will be modeled after their behavior is agreed. They should reference the user's content without making private entries public by default.
+Social post drafts are private snapshots of user-approved copy. They may reference a diary, conversation, or note owned by the same user, or have no source. The user must explicitly approve a draft, and approval does not publish it. External publication is deferred until a platform is selected.
+
+The 30-day activity review is computed from diary dates and active source rows, so no separate review table is needed yet. It counts complete conversations, their finalized messages, notes, and active days for today and the preceding 29 days in the user's time zone. AI-written personality review is deferred until the AI integration discussion.
 
 ## Confirmed decision
 

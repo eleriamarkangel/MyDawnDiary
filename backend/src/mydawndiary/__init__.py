@@ -1,0 +1,1 @@
+"""MyDawnDiary API."""

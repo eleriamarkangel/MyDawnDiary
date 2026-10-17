@@ -1,6 +1,6 @@
 # MyDawnDiary — Phase 1 API task list
 
-This is a planning draft for the first backend phase. No endpoints, database schema, or framework have been implemented or finalized. Commit the Markdown planning files after the data model is agreed, as requested.
+This is the task list for the first backend phase. The account, daily diary, conversation, note, recycle-bin, private social-draft, and 30-day activity endpoints and database schema are implemented in `backend/`. This is the Phase 1 backend baseline on `main`. AI, speech-to-text, wake-word, email, external social publishing, and AI-written personality review remain open. AI integration will be discussed after the backend layer.
 
 ## Working resource model
 
@@ -69,10 +69,10 @@ The one-record-to-one-conversation relationship is confirmed. Endpoint and table
 - Decide whether deleted data can be restored and how export will work.
 - Document the API and verify the key account-to-record-to-conversation flow.
 
-## Later API areas to define
+## Additional backend areas
 
-- Social post drafts and publishing.
-- Thirty-day activity and personality review.
+- Private social post drafts and explicit approval are implemented. External publication needs a platform integration and remains open.
+- Thirty-day activity counts are implemented. AI-written personality reflections remain open until AI integration is discussed.
 
 ## Open decisions before implementation
 
@@ -80,7 +80,7 @@ The one-record-to-one-conversation relationship is confirmed. Endpoint and table
 - Where is the “Dear Diary” phrase detected, and how is accidental activation handled?
 - How does the app distinguish a true conversation ending from a pause?
 - How does the user choose between conversation recording and note creation?
-- Which user time zone defines the diary day, and how is a conversation spanning midnight assigned?
+- Use the account's IANA time zone for diary dates. Permit today or yesterday for new content and final conversation placement, and allow edits to older diaries.
 - When should the combined daily entry be generated or refreshed?
 - What role would an optional free-tier email OTP serve?
 - Which database and Python API framework should be used on the existing server?

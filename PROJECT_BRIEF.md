@@ -10,15 +10,16 @@ Create a full-stack application called **MyDawnDiary** that records a person's c
 
 Each user has one diary per calendar day. That diary groups multiple AI conversations and notes. A note may link to a conversation or remain unlinked within the day's diary.
 The diary also includes one AI-written combined entry based on that day's conversations and notes. Users may edit this daily entry while the original AI version and full source items remain available for review.
+Diary dates follow the user's chosen time zone. New content may be saved to today or yesterday, never a future day. A conversation crossing midnight remains one record; its day can be chosen at completion. Existing older summaries and notes remain editable.
 
-This document captures the starting idea. The product behavior, data boundaries, and implementation will be decided together one topic at a time. No solution is selected yet.
+This document captures the product direction and decisions made so far. A Python API and relational data model are in `backend/`; AI and speech integrations will be discussed after the backend layer. Private social drafts and 30-day activity counts are implemented; external posting and personality review remain open.
 
 ## Initial deployment scope
 
 - Plan for the application and its data to run in the cloud.
 - Use the existing user-owned server for the initial deployment, with light workloads only.
 - Initial capacity target: no more than 10 users using the application at the same time.
-- A Python API is being considered; the API framework and database have not been chosen.
+- The backend uses Python, FastAPI, SQLAlchemy, and Alembic. PostgreSQL is planned for the server; SQLite is used for local development and tests.
 - Planned application directory on the server: `/srv/app/mydawndiary`, separate from the existing website in `/srv/app/www` and the landing-page project in `/srv/app/mbe-landpage`.
 - Use the development account for application files. Reserve administrator access for system configuration when needed.
 
@@ -46,4 +47,4 @@ Email and password sign-in is planned. Email OTP is optional if a free sending a
 
 ## Working approach
 
-We will clarify one area at a time. As decisions are made, this brief can become the source of agreed requirements before implementation begins.
+We will clarify one area at a time. This brief records the agreed requirements alongside the Phase 1 backend baseline; later integrations will build on it.
