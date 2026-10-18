@@ -120,7 +120,7 @@ function AuthScreen({ onAuthenticated, notify }: {
     <section className="auth-panel-wrap"><div className="auth-panel">
       <div className="eyebrow">{mode === "verify" ? "One more step" : mode === "register" ? "Begin your diary" : "Your private space"}</div>
       <h2>{heading}</h2><p>{description}</p>
-      <form onSubmit={submit}>
+      <form key={mode} onSubmit={submit}>
         {mode === "register" && <div className="field"><label htmlFor="display-name">Display name <span className="helper">(optional)</span></label><input id="display-name" name="display_name" autoComplete="name" maxLength={120}/></div>}
         <div className="field"><label htmlFor="email">Email</label><input id="email" name="email" type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} required/></div>
         {mode === "verify" ? <div className="field"><label htmlFor="code">Verification code</label><input id="code" className="otp-code" name="code" type="text" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} placeholder="000000" required/></div> :
