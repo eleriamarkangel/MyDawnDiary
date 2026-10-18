@@ -57,7 +57,7 @@ The person who owns private diary content.
 | `created_at` | Account creation time | Proposed |
 | `time_zone` | Determines the user's local diary date | Proposed |
 
-Authentication credentials should be handled separately from diary content. Email and password sign-in is confirmed. Email OTP may be added within a free sending allowance; its exact role (email verification, sign-in, or second factor) is still open.
+Authentication credentials should be handled separately from diary content. Email and password sign-in is confirmed. Email OTP verifies the address after registration; Resend delivers the code.
 
 ### Daily diary
 
@@ -135,12 +135,12 @@ A standalone text entry written by a user, separate from AI conversation records
 - Decide whether deleting a record also removes its entries and what happens to linked notes, reviews, and social drafts when the three-day recycle-bin period ends.
 - Preserve notes when a linked conversation is permanently deleted; clear the link so those notes become unlinked.
 - The first API version links a note only to a conversation in the same daily diary.
-- The user chooses an IANA time zone for diary dates. New records and notes may be assigned only to the user's today or yesterday; future dates are disallowed. A conversation crossing midnight remains one record and defaults to its start day, but may be assigned to today or yesterday when completed. Older diaries remain editable.
+- The user chooses an IANA time zone for diary dates. New records may be assigned only to the user's today or yesterday; notes may be assigned to any past date. Future dates are disallowed. A conversation crossing midnight remains one record and defaults to its start day, but may be assigned to today or yesterday when completed. Older diaries remain editable. The diary UI navigates 30 previous days; All Notes keeps older notes accessible.
 - The first API version creates a daily diary when its first conversation or note arrives, avoiding empty stored diary rows.
 - Decide when the combined entry is first generated and how it is updated when another conversation or note is added that day.
 - Define whether the 30-day review uses original conversation times, save times, or both.
 - Define how to handle missing provider, model, and timestamp information if import is added later.
-- Define the role of email OTP if a free sending service is selected.
+- Email OTP verifies the address after registration and is delivered through Resend.
 
 ## Later entities
 

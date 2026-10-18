@@ -26,6 +26,14 @@ class LoginIn(BaseModel):
     password: str
 
 
+class EmailVerificationRequest(BaseModel):
+    email: EmailStr
+
+
+class EmailVerificationCode(EmailVerificationRequest):
+    code: str = Field(pattern=r"^[0-9]{6}$")
+
+
 class PasswordChange(BaseModel):
     current_password: str
     new_password: str = Field(min_length=12, max_length=128)
@@ -51,6 +59,7 @@ class UserOut(BaseModel):
 
     id: str
     email: EmailStr
+    email_verified_at: datetime | None
     display_name: str | None
     time_zone: str
     created_at: datetime
@@ -171,7 +180,7 @@ class NoteOut(BaseModel):
 
 
 class TrashOut(BaseModel):
-    records: list[RecordOut]
+    records: list[RecordDetail]
     notes: list[NoteOut]
 
 

@@ -1,0 +1,28 @@
+/* Change this palette to recolor the whole app. Components use semantic tokens below. */
+:root {
+  --dawn-cream: #fff8ee;
+  --dawn-paper: #fffdf9;
+  --dawn-peach: #ffe6d7;
+  --dawn-coral: #f47761;
+  --dawn-coral-hover: #e8624d;
+  --dawn-yellow: #f8d67b;
+  --dawn-gold: #d9a74d;
+  --dawn-navy: #172743;
+  --dawn-muted: #68738a;
+  --dawn-border: #f0dfcf;
+  --dawn-rule: rgba(92, 158, 197, .38);
+
+  --color-page: var(--dawn-cream);
+  --color-surface: var(--dawn-paper);
+  --color-surface-soft: #fff3e8;
+  --color-primary: var(--dawn-coral);
+  --color-primary-hover: var(--dawn-coral-hover);
+  --color-accent: var(--dawn-yellow);
+  --color-text: var(--dawn-navy);
+  --color-muted: var(--dawn-muted);
+  --color-border: var(--dawn-border);
+  --color-paper-line: var(--dawn-rule);
+  --paper-row: 35px;
+  --color-focus: #b45c37;
+  --color-danger: #a53232;
+}

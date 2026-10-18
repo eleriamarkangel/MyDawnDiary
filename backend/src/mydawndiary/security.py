@@ -45,4 +45,6 @@ def current_user(credentials: HTTPAuthorizationCredentials | None = Depends(bear
         raise HTTPException(status_code=401, detail="Account not found", headers={"WWW-Authenticate": "Bearer"})
     if claims.get("version") != user.token_version:
         raise HTTPException(status_code=401, detail="Token has been revoked", headers={"WWW-Authenticate": "Bearer"})
+    if user.email_verified_at is None:
+        raise HTTPException(status_code=403, detail="Verify your email before continuing")
     return user

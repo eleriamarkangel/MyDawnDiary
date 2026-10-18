@@ -25,6 +25,14 @@ def allowed_new_date(user: User, chosen: date | None, now: datetime) -> date:
     return selected
 
 
+def allowed_note_date(user: User, chosen: date | None, now: datetime) -> date:
+    today = local_today(user, now)
+    selected = chosen or today
+    if selected > today:
+        raise HTTPException(status_code=422, detail="Notes cannot be saved to a future date")
+    return selected
+
+
 def owned_diary(db: Session, user: User, diary_date: date) -> DailyDiary:
     diary = db.scalar(select(DailyDiary).where(DailyDiary.user_id == user.id, DailyDiary.diary_date == diary_date))
     if diary is None:

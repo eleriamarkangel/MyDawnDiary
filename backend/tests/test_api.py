@@ -50,7 +50,7 @@ def test_cross_midnight_conversation_is_one_record_and_transcript_is_immutable(a
     assert client.patch(f"/records/{record['id']}/entries/{first.json()['id']}", headers=headers, json={"content": "Changed"}).status_code == 404
 
 
-def test_yesterday_today_limit_and_older_edits(api, monkeypatch):
+def test_notes_can_use_past_dates_while_conversations_keep_their_date_limit(api, monkeypatch):
     client, _ = api
     headers = register_and_login(client, "dates@example.com")
     fixed = datetime(2026, 10, 17, 17, 10, tzinfo=timezone.utc)
@@ -58,15 +58,22 @@ def test_yesterday_today_limit_and_older_edits(api, monkeypatch):
     monkeypatch.setattr(note_routes, "utc_now", lambda: fixed)
 
     assert client.post("/records", headers=headers, json={"diary_date": "2026-10-19"}).status_code == 422
-    assert client.post("/notes", headers=headers, json={"diary_date": "2026-10-16", "content": "Too old"}).status_code == 422
+    assert client.post("/records", headers=headers, json={"diary_date": "2026-10-16"}).status_code == 422
+    assert client.post("/notes", headers=headers, json={"diary_date": "2026-10-19", "content": "Future"}).status_code == 422
+    old_date = (fixed.astimezone(ZoneInfo("Asia/Manila")).date() - timedelta(days=45)).isoformat()
+    old_note = client.post("/notes", headers=headers, json={"diary_date": old_date, "content": "A memory from before the navigation window"})
+    assert old_note.status_code == 201, old_note.text
     yesterday_note = client.post("/notes", headers=headers, json={"diary_date": "2026-10-17", "content": "Yesterday"})
     assert yesterday_note.status_code == 201
+    assert [item["id"] for item in client.get(f"/diaries/{old_date}", headers=headers).json()["notes"]] == [old_note.json()["id"]]
+    assert [item["id"] for item in client.get("/diaries/2026-10-17", headers=headers).json()["notes"]] == [yesterday_note.json()["id"]]
+    assert {item["id"] for item in client.get("/notes", headers=headers).json()} == {old_note.json()["id"], yesterday_note.json()["id"]}
 
     later = fixed + timedelta(days=5)
     monkeypatch.setattr(note_routes, "utc_now", lambda: later)
     note_id = yesterday_note.json()["id"]
     assert client.patch(f"/notes/{note_id}", headers=headers, json={"content": "Edited later"}).json()["content"] == "Edited later"
-    assert client.post("/notes", headers=headers, json={"diary_date": "2026-10-17", "content": "New old item"}).status_code == 422
+    assert client.post("/notes", headers=headers, json={"diary_date": "2026-10-17", "content": "New old item"}).status_code == 201
 
 
 def test_resumed_draft_must_be_assigned_to_today_or_yesterday(api, monkeypatch):
@@ -88,12 +95,16 @@ def test_recycle_bin_keeps_linked_note_then_unlinks_on_purge(api, monkeypatch):
     client, factory = api
     headers = register_and_login(client, "trash@example.com")
     record = client.post("/records", headers=headers, json={}).json()
+    entry = client.post(f"/records/{record['id']}/entries", headers=headers, json={"speaker": "user", "content": "A deleted but recoverable thought"})
+    assert entry.status_code == 201, entry.text
     linked = client.post("/notes", headers=headers, json={"content": "Keep me", "record_id": record["id"]}).json()
     standalone = client.post("/notes", headers=headers, json={"content": "Also keep me"}).json()
 
     assert client.delete(f"/records/{record['id']}", headers=headers).status_code == 204
     assert client.get(f"/notes/{linked['id']}", headers=headers).json()["record_id"] == record["id"]
-    assert len(client.get("/trash", headers=headers).json()["records"]) == 1
+    trashed_records = client.get("/trash", headers=headers).json()["records"]
+    assert len(trashed_records) == 1
+    assert [item["content"] for item in trashed_records[0]["entries"]] == ["A deleted but recoverable thought"]
     assert client.post(f"/records/{record['id']}/restore", headers=headers).status_code == 200
 
     assert client.delete(f"/records/{record['id']}", headers=headers).status_code == 204

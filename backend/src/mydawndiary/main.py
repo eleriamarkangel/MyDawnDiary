@@ -1,4 +1,9 @@
+from pathlib import Path
+import os
+
 from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
 
 from . import auth, diaries, notes, records, reviews, social_drafts, trash
 from .operations import TrafficMiddleware
@@ -13,6 +18,15 @@ app.include_router(notes.router)
 app.include_router(trash.router)
 app.include_router(social_drafts.router)
 app.include_router(reviews.router)
+
+frontend_dir = Path(os.getenv("FRONTEND_DIST_DIR") or Path(__file__).resolve().parents[3] / "frontend" / "dist")
+if frontend_dir.is_dir():
+    app.mount("/app", StaticFiles(directory=frontend_dir, html=True), name="frontend")
+
+
+@app.get("/", include_in_schema=False)
+def frontend_home() -> RedirectResponse:
+    return RedirectResponse(url="/app/" if frontend_dir.is_dir() else "/docs")
 
 
 @app.get("/health", tags=["operations"])

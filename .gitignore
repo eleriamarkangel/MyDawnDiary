@@ -1,4 +1,4 @@
-# Frontend build and dependency artifacts; source files remain trackable.
+# Frontend dependencies and TypeScript cache. The production build is tracked
+# so the server can deploy without a Node.js toolchain.
 frontend/node_modules/
-frontend/dist/
 frontend/*.tsbuildinfo

@@ -10,6 +10,9 @@ from mydawndiary import operations
 
 def test_throttling_aggregate_log_and_single_spike_email(monkeypatch, caplog):
     caplog.set_level(logging.INFO, logger=operations.logger.name)
+    monkeypatch.setattr(operations.logger, "propagate", True)
+    # Alembic's logging configuration can disable existing loggers in this suite.
+    monkeypatch.setattr(operations.logger, "disabled", False)
     clock = [10.0]
     monkeypatch.setattr(operations, "monotonic", lambda: clock[0])
     sent = []

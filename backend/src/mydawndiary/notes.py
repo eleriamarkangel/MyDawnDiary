@@ -8,7 +8,7 @@ from .database import get_db
 from .models import DailyDiary, Note, User
 from .schemas import NoteCreate, NoteOut, NotePatch
 from .security import current_user
-from .service import allowed_new_date, clear_combined, get_or_create_diary, mark_stale, owned_note, owned_record, trash_deadline, utc_now
+from .service import allowed_note_date, clear_combined, get_or_create_diary, mark_stale, owned_note, owned_record, trash_deadline, utc_now
 
 
 router = APIRouter(prefix="/notes", tags=["notes"])
@@ -35,7 +35,7 @@ def create_note(
 ) -> Note:
     linked = owned_record(db, user, body.record_id) if body.record_id else None
     selected_date = body.diary_date or (linked.diary.diary_date if linked else None)
-    diary_date = allowed_new_date(user, selected_date, utc_now())
+    diary_date = allowed_note_date(user, selected_date, utc_now())
     diary = get_or_create_diary(db, user, diary_date)
     if linked is not None and linked.diary_id != diary.id:
         raise HTTPException(status_code=422, detail="A linked conversation must be in the same daily diary")
