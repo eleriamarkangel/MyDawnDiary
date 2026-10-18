@@ -17,6 +17,14 @@ $env:DATABASE_URL = "sqlite:///./mydawndiary.db"
 
 The API serves interactive documentation at `/docs`. Set `DATABASE_URL` to a PostgreSQL `postgresql+psycopg://...` URL for the server. Keep `JWT_SECRET` and database credentials in the server environment; `.env` is ignored by Git.
 
+## Traffic protection and alerts
+
+The API counts requests and emits one aggregate log line per minute with the request, throttle, and server-error counts. It does not log diary text, request bodies, tokens, or email addresses. With the default settings it returns HTTP 429 after 120 requests per minute from one direct client address, or after 10 requests per minute to `/auth/*` from that address. The response includes `Retry-After: 60`. Set `REQUESTS_PER_MINUTE` and `AUTH_REQUESTS_PER_MINUTE` to tune the limits.
+
+At 300 requests in a minute, it writes a warning and can send one email alert. Set `RESEND_API_KEY`, `ALERT_EMAIL_FROM`, and `ALERT_EMAIL_TO` to use Resend. The sender must use a domain verified in Resend. Alternatively, set the `ALERT_SMTP_*` fields with the same sender and recipients to use SMTP STARTTLS on port 587. `ALERT_EMAIL_TO` accepts comma-separated recipients. `ALERT_COOLDOWN_MINUTES` defaults to 15, so a sustained spike does not flood the inbox. Mail failures are logged and do not interrupt API requests. These are request-volume alerts, not CPU or memory alarms.
+
+The counters are in memory **per API worker**. For a deployment with multiple workers or public traffic, configure shared rate limits at the reverse proxy as well. Ensure the proxy passes the real client address only from a trusted proxy; otherwise the API may treat all visitors as one address. Uvicorn access logging is also available for individual HTTP requests. This repository does not contain an active MyDawnDiary server deployment, so these protections start when this API version is deployed and the optional email settings are supplied.
+
 ## Current API flow
 
 1. Register with email, password, and an IANA time zone; sign in for a bearer token. The owner can update their profile or change their password with the current password. Changing the password or calling `POST /auth/sign-out-all` revokes existing access tokens.
@@ -35,7 +43,7 @@ Records and notes move to `/trash` for three days when deleted. A restore endpoi
 
 ## Integration boundaries
 
-The API **does not yet connect to an AI model, microphone, speech-to-text service, wake-word detector, or email sender**. The conversation-complete and daily-entry endpoints store text supplied by a future AI integration; they do not generate it. Email OTP, password recovery, social publishing, and AI-written personality review remain pending. Social drafts are private snapshots; approving one does not authorize or initiate publication. Publishing will require a separate provider integration and explicit user action.
+The API **does not yet connect to an AI model, microphone, speech-to-text service, wake-word detector, or user-facing email sender**. The optional operations alert above is the only email integration. The conversation-complete and daily-entry endpoints store text supplied by a future AI integration; they do not generate it. Email OTP, password recovery, social publishing, and AI-written personality review remain pending. Social drafts are private snapshots; approving one does not authorize or initiate publication. Publishing will require a separate provider integration and explicit user action.
 
 The combined daily entry is marked stale when source content changes. Deleting a conversation or note clears both versions of that daily entry because they might contain deleted content. A later AI integration must regenerate it.
 Regenerating an entry with a user edit returns a conflict unless the caller explicitly sets `replace_user_edit` to true.

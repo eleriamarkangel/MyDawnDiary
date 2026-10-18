@@ -1,9 +1,11 @@
 from fastapi import FastAPI
 
 from . import auth, diaries, notes, records, reviews, social_drafts, trash
+from .operations import TrafficMiddleware
 
 
 app = FastAPI(title="MyDawnDiary API", version="0.1.0")
+app.add_middleware(TrafficMiddleware)
 app.include_router(auth.router)
 app.include_router(diaries.router)
 app.include_router(records.router)

@@ -1,0 +1,4 @@
+# Frontend build and dependency artifacts; source files remain trackable.
+frontend/node_modules/
+frontend/dist/
+frontend/*.tsbuildinfo

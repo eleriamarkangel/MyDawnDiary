@@ -7,6 +7,9 @@ from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 os.environ.setdefault("JWT_SECRET", "test-only-secret-that-is-longer-than-thirty-two-characters")
+os.environ.setdefault("REQUESTS_PER_MINUTE", "10000")
+os.environ.setdefault("AUTH_REQUESTS_PER_MINUTE", "10000")
+os.environ.setdefault("ALERT_REQUESTS_PER_MINUTE", "20000")
 
 from mydawndiary.database import Base, get_db  # noqa: E402
 from mydawndiary.main import app  # noqa: E402
