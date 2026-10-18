@@ -15,7 +15,7 @@ $env:DATABASE_URL = "sqlite:///./mydawndiary.db"
 .\.venv\Scripts\python.exe -m uvicorn mydawndiary.main:app --reload
 ```
 
-The API serves interactive documentation at `/docs`. Set `DATABASE_URL` to a PostgreSQL `postgresql+psycopg://...` URL for the server. Keep `JWT_SECRET` and database credentials in the server environment; `.env` is ignored by Git.
+The API serves interactive documentation at `/docs`. Set `DATABASE_URL` to a PostgreSQL `postgresql+psycopg://...` URL for the server. Keep `JWT_SECRET` and database credentials in the server environment. A `.env` file is ignored by Git but is not loaded automatically; supply the variables through the service configuration or load the file explicitly when launching the API.
 
 ## Traffic protection and alerts
 
