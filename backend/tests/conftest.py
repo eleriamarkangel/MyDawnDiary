@@ -9,11 +9,12 @@ from sqlalchemy.pool import StaticPool
 os.environ.setdefault("JWT_SECRET", "test-only-secret-that-is-longer-than-thirty-two-characters")
 
 from mydawndiary.database import Base, get_db  # noqa: E402
+from mydawndiary import auth as auth_routes  # noqa: E402
 from mydawndiary.main import app  # noqa: E402
 
 
 @pytest.fixture
-def api():
+def api(monkeypatch):
     engine = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
 
     @event.listens_for(engine, "connect")
@@ -28,8 +29,11 @@ def api():
             yield session
 
     app.dependency_overrides[get_db] = test_db
+    sent_codes: list[tuple[str, str]] = []
+    monkeypatch.setattr(auth_routes, "send_verification_email", lambda address, code: sent_codes.append((address, code)))
     try:
         with TestClient(app) as client:
+            client.sent_verification_emails = sent_codes
             yield client, factory
     finally:
         app.dependency_overrides.clear()
@@ -41,6 +45,9 @@ def register_and_login(client: TestClient, email: str, time_zone: str = "Asia/Ma
     password = "long-test-password-123"
     registered = client.post("/auth/register", json={"email": email, "password": password, "time_zone": time_zone})
     assert registered.status_code == 201, registered.text
+    code = next(code for address, code in reversed(client.sent_verification_emails) if address == email)
+    verified = client.post("/auth/verify-email", json={"email": email, "code": code})
+    assert verified.status_code == 204, verified.text
     logged_in = client.post("/auth/login", json={"email": email, "password": password})
     assert logged_in.status_code == 200, logged_in.text
     return {"Authorization": f"Bearer {logged_in.json()['access_token']}"}

@@ -18,7 +18,7 @@ The one-record-to-one-conversation relationship is confirmed. Endpoint and table
 
 - Define the minimum information required to create an account.
 - Define sign-in, sign-out, and account recovery behavior.
-- Use email and password for the first sign-in method. Define an optional email OTP flow only if a free sending allowance meets the app's needs.
+- Use email and password for sign-in. Verify the address after registration with an email OTP delivered by Resend.
 - Define how a user views and updates their own account.
 - Define how account deletion affects owned records and conversation entries.
 - Ensure every private-data operation checks the signed-in user's ownership.
@@ -80,7 +80,7 @@ The one-record-to-one-conversation relationship is confirmed. Endpoint and table
 - Where is the “Dear Diary” phrase detected, and how is accidental activation handled?
 - How does the app distinguish a true conversation ending from a pause?
 - How does the user choose between conversation recording and note creation?
-- Use the account's IANA time zone for diary dates. Permit today or yesterday for new content and final conversation placement, and allow edits to older diaries.
+- Use the account's IANA time zone for diary dates. Permit today or yesterday for new conversations and final conversation placement, allow any past date for new notes, and allow edits to older diaries. Reject future dates.
 - When should the combined daily entry be generated or refreshed?
-- What role would an optional free-tier email OTP serve?
+- Email OTP verifies the address after registration; Resend provides delivery.
 - Which database and Python API framework should be used on the existing server?

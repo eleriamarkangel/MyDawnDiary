@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from .database import get_db
 from .models import DailyDiary, Note, Record, User
-from .schemas import NoteOut, RecordOut, TrashOut
+from .schemas import NoteOut, RecordDetail, TrashOut
 from .security import current_user
 from .service import utc_now
 
@@ -26,6 +26,6 @@ def list_trash(user: User = Depends(current_user), db: Session = Depends(get_db)
         ).order_by(Note.deleted_at.desc())
     ).all()
     return TrashOut(
-        records=[RecordOut.model_validate(record) for record in records],
+        records=[RecordDetail.model_validate(record) for record in records],
         notes=[NoteOut.model_validate(note) for note in notes],
     )
