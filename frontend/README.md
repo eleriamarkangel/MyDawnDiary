@@ -26,3 +26,13 @@ The build goes to `dist/`. Commit the updated build along with frontend source s
 Edit **`src/theme.css`** to change the global palette. Components use the semantic color variables there; `src/styles.css` holds layout and component styles. The horizontal paper rules are CSS gradients, so their color follows the theme. The sunrise illustration is used only on the account introduction.
 
 The frontend covers email registration and verification, sign-in, and manual notes. The diary page lets you browse from today back through 30 previous days, with a date dropdown and one day's notes at a time. All Notes includes older notes beyond that navigation window. A note's **See Diary** button opens its assigned date, including dates older than the picker range. New notes can be assigned to any previous date; future dates are rejected. Trash lists deleted notes and conversations that are still within the three-day restore period and offers a Restore button. The Voice Note control is visibly disabled until on-device transcription is implemented and tested across desktop and mobile browsers.
+
+## Account settings and personality preview
+
+Settings offers Golden dawn (orange/yellow), Morning sky (blue/yellow), and Sunlit garden (green/yellow). The theme is saved through `PATCH /auth/me` and applied when the user signs in on any device. Settings also offers permanent account deletion with current-password verification and a typed DELETE confirmation; successful deletion clears the browser session.
+
+Personality displays a responsive six-axis radar graph with fixed, clearly labeled sample values. It does not analyze diary content yet; replace the sample data in `src/AccountPanels.tsx` when AI integration is available.
+
+Before serving this build against an existing database, run `alembic upgrade head` from the backend environment and restart the backend.
+
+The sign-in page includes Forgot password, email-code requests/resends, new-password confirmation, and a return to sign-in after reset. Delivery requires the backend email sender configuration.

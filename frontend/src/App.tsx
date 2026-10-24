@@ -1,13 +1,17 @@
+import { SettingsPanel, PersonalityPanel } from "./AccountPanels";
+import { PasswordRecovery } from "./PasswordRecovery";
 import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { api, ApiError, diaryDateLabel, displayDate, shiftDate, userDate, type Diary, type Note, type Trash, type User } from "./api";
 
-type IconName = "home" | "note" | "plus" | "mic" | "search" | "logout" | "trash";
-type View = "today" | "notes" | "trash";
+type IconName = "home" | "note" | "plus" | "mic" | "search" | "logout" | "trash" | "settings" | "personality";
+type View = "today" | "notes" | "trash" | "settings" | "personality";
 type Editor = Note | "new" | null;
 
 function Icon({ name }: { name: IconName }) {
   const common = { fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
   return <svg className="icon" viewBox="0 0 24 24" aria-hidden="true" {...common}>
+    {name === "settings" && <><circle cx="12" cy="12" r="4"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3M5 5l2 2m10 10 2 2M5 19l2-2M17 7l2-2"/></>}
+    {name === "personality" && <><path d="m12 2 10 7-4 12H6L2 9Z M12 2v10m10-3-10 3m6 9-6-9M6 21l6-9M2 9l10 3"/></>}
     {name === "home" && <><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M9 21v-7h6v7"/></>}
     {name === "note" && <><path d="M6 2h9l5 5v14a1 1 0 0 1-1 1H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></>}
     {name === "plus" && <path d="M12 4v16M4 12h16"/>}
@@ -33,6 +37,7 @@ function AuthScreen({ onAuthenticated, notify }: {
   notify: (message: string) => void;
 }) {
   const [mode, setMode] = useState<"login" | "register" | "verify">("login");
+  const [recovering, setRecovering] = useState(false);
   const [email, setEmail] = useState(sessionStorage.getItem("mdd_verification_email") || "");
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
@@ -118,6 +123,7 @@ function AuthScreen({ onAuthenticated, notify }: {
       <div className="auth-footer">MyDawnDiary · Your day, in your words.</div>
     </section>
     <section className="auth-panel-wrap"><div className="auth-panel">
+      {recovering ? <PasswordRecovery initialEmail={email} onBack={() => setRecovering(false)} onSuccess={(address) => { setEmail(address); setMode("login"); setRecovering(false); setError(""); notify("Password reset. Sign in with your new password."); }}/> : <>
       <div className="eyebrow">{mode === "verify" ? "One more step" : mode === "register" ? "Begin your diary" : "Your private space"}</div>
       <h2>{heading}</h2><p>{description}</p>
       <form key={mode} onSubmit={submit}>
@@ -129,10 +135,12 @@ function AuthScreen({ onAuthenticated, notify }: {
         <div className="form-error" role="alert">{error}</div>
         <button className="button button-primary" type="submit" disabled={pending}>{mode === "verify" ? "Verify email" : mode === "register" ? "Create account" : "Sign in"}</button>
       </form>
+      {mode === "login" && <div className="auth-switch"><button className="text-button" type="button" disabled={pending} onClick={() => setRecovering(true)}>Forgot password?</button></div>}
       {mode === "verify" ? <div className="auth-switch">
         <button className="text-button" type="button" onClick={resend} disabled={pending || minutes > 0}>{minutes > 0 ? `Resend code in ${minutes} min` : "Resend code"}</button><br/>
         <button className="text-button" type="button" onClick={() => { setError(""); setMode("login"); }}>Back to sign in</button>
       </div> : <div className="auth-switch">{mode === "register" ? "Already have an account?" : "New here?"} <button className="text-button" type="button" onClick={() => { setError(""); setMode(mode === "register" ? "login" : "register"); }}>{mode === "register" ? "Sign in" : "Create an account"}</button></div>}
+      </>}
     </div></section>
   </main>;
 }
@@ -252,8 +260,10 @@ function TrashPanel({ trash, loading, error, restoringId, onRestore }: {
   </>;
 }
 
-function Dashboard({ user, token, notes, hasMore, onSignOut, onLoadMore, onReloadNotes, onSaveNote, onDeleteNote, notify }: {
+function Dashboard({ user, onUserChange, onDeleted, token, notes, hasMore, onSignOut, onLoadMore, onReloadNotes, onSaveNote, onDeleteNote, notify }: {
   user: User;
+  onUserChange: (user: User) => void;
+  onDeleted: () => void;
   token: string;
   notes: Note[];
   hasMore: boolean;
@@ -375,6 +385,8 @@ function Dashboard({ user, token, notes, hasMore, onSignOut, onLoadMore, onReloa
   const nav = (place: "side" | "mobile") => <nav className={place === "side" ? "side-nav" : "mobile-nav"} aria-label={`${place === "side" ? "Main" : "Mobile"} navigation`}>
     <NavButton view="today" current={view} icon="home" label="Diary" onSelect={setView}/>
     <NavButton view="notes" current={view} icon="note" label="Notes" onSelect={setView}/>
+    <NavButton view="personality" current={view} icon="personality" label="Personality" onSelect={setView}/>
+    <NavButton view="settings" current={view} icon="settings" label="Settings" onSelect={setView}/>
     <NavButton view="trash" current={view} icon="trash" label="Trash" onSelect={setView}/>
   </nav>;
 
@@ -393,8 +405,10 @@ function Dashboard({ user, token, notes, hasMore, onSignOut, onLoadMore, onReloa
         {olderLinkedDate && <p className="historical-hint">Opened from a note outside the 30-day picker. Choose a recent date above to return.</p>}
         <section className="diary-card notebook-paper" aria-label="Daily diary"><div className="diary-content"><div className="diary-date">{diaryDateLabel(selectedDate)}</div><h2 className="diary-heading">Dear diary,</h2><p className={diaryText ? "" : "diary-placeholder"}>{diaryLoading ? "Opening this page…" : diaryState?.error ? diaryState.error : diaryText || "Your daily entry will appear here when one is ready. Notes for this day are just below."}</p></div></section></> :
         view === "notes" ? <div className="page-intro"><div><div className="eyebrow">Little moments worth keeping</div><h1 className="page-title">Your Notes</h1><p className="page-subtitle">All the thoughts you have saved so far.</p></div></div> :
+        view === "settings" ? <SettingsPanel user={user} token={token} onUserChange={onUserChange} onDeleted={onDeleted}/> :
+        view === "personality" ? <PersonalityPanel/> :
         <TrashPanel trash={trashState.value} loading={trashState.loading} error={trashState.error} restoringId={restoringId} onRestore={restore}/>}
-      {view !== "trash" && <><div className="section-head"><div><h2 className="section-title">{view === "today" ? "Notes" : "All notes"}</h2></div>
+      {(view === "today" || view === "notes") && <><div className="section-head"><div><h2 className="section-title">{view === "today" ? "Notes" : "All notes"}</h2></div>
         <div className="actions">{view === "notes" && <label className="search-wrap"><Icon name="search"/><span className="sr-only">Search notes</span><input className="search-input" type="search" placeholder="Search notes" value={search} onChange={(event) => setSearch(event.target.value)}/></label>}
           <button className="button button-primary" type="button" onClick={() => setEditor("new")}><Icon name="plus"/> New Note</button>
           <button className="button button-secondary" type="button" disabled title="Voice notes are coming later"><Icon name="mic"/> Voice Note</button>
@@ -415,6 +429,10 @@ export default function App(): ReactNode {
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(Boolean(token));
   const [notice, setNotice] = useState("");
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = user?.theme || "orange-yellow";
+  }, [user?.theme]);
 
   const notify = useCallback((message: string) => setNotice(message), []);
   useEffect(() => {
@@ -489,7 +507,7 @@ export default function App(): ReactNode {
 
   return <>
     {loading ? <div className="auth-layout"><div className="auth-story"><Brand/></div><div className="auth-panel-wrap"><p>Opening your diary…</p></div></div> :
-      token && user ? <Dashboard user={user} token={token} notes={notes} hasMore={hasMore} onSignOut={signOut} onLoadMore={loadMore} onReloadNotes={() => loadContent(token)} onSaveNote={saveNote} onDeleteNote={deleteNote} notify={notify}/> :
+      token && user ? <Dashboard user={user} onUserChange={setUser} onDeleted={() => { signOut(); sessionStorage.removeItem("mdd_verification_email"); sessionStorage.removeItem("mdd_otp_wait_until"); notify("Account and all linked content deleted. You can register again with the same email."); }} token={token} notes={notes} hasMore={hasMore} onSignOut={signOut} onLoadMore={loadMore} onReloadNotes={() => loadContent(token)} onSaveNote={saveNote} onDeleteNote={deleteNote} notify={notify}/> :
         <AuthScreen onAuthenticated={authenticated} notify={notify}/>}
     <div className={`toast ${notice ? "show" : ""}`} role="status" aria-live="polite">{notice}</div>
   </>;

@@ -29,11 +29,19 @@ class User(Base):
     email_otp_attempts: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     email_otp_window_started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     email_otp_sends_in_window: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    reset_code_hash: Mapped[str | None] = mapped_column(String(64))
+    reset_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    reset_sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    reset_attempts: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    reset_window_started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    reset_sends_in_window: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     display_name: Mapped[str | None] = mapped_column(String(120))
     time_zone: Mapped[str] = mapped_column(String(64))
+    theme: Mapped[str] = mapped_column(String(20), default="orange-yellow", server_default="orange-yellow")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
 
     diaries: Mapped[list["DailyDiary"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    social_drafts: Mapped[list["SocialDraft"]] = relationship(back_populates="user", cascade="all, delete-orphan")
 
 
 class DailyDiary(Base):
@@ -139,4 +147,4 @@ class SocialDraft(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now)
 
-    user: Mapped[User] = relationship()
+    user: Mapped[User] = relationship(back_populates="social_drafts")

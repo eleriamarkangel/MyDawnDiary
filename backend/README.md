@@ -61,7 +61,7 @@ Records and notes move to `/trash` for three days when deleted. A restore endpoi
 
 ## Integration boundaries
 
-The API **does not yet connect to an AI model, microphone, speech-to-text service, or wake-word detector**. The conversation-complete and daily-entry endpoints store text supplied by a future AI integration; they do not generate it. Email verification uses Resend; password recovery, social publishing, and AI-written personality review remain pending. Social drafts are private snapshots; approving one does not authorize or initiate publication. Publishing will require a separate provider integration and explicit user action.
+The API **does not yet connect to an AI model, microphone, speech-to-text service, or wake-word detector**. The conversation-complete and daily-entry endpoints store text supplied by a future AI integration; they do not generate it. Email verification and password recovery use Resend; social publishing and AI-written personality review remain pending. Social drafts are private snapshots; approving one does not authorize or initiate publication. Publishing will require a separate provider integration and explicit user action.
 
 Verification codes expire after 10 minutes. At most five wrong guesses are allowed per code, with a five-minute resend wait and five sends per hour. The UI should disable its resend button for five minutes after requesting a code; the API also enforces the wait. Resending replaces the previous code. Unknown and already verified addresses get the same 202 response from the resend endpoint. Existing accounts are marked verified when the migration is applied.
 
@@ -75,3 +75,19 @@ Regenerating an entry with a user edit returns a conflict unless the caller expl
 ```
 
 The tests cover account isolation, the midnight date choice, immutable completed transcripts, older-diary editing, recycle-bin restoration and purging, preservation of original summaries, social draft approval, and private 30-day activity counts.
+
+## Account settings
+
+Run `alembic upgrade head` before starting this version against an existing database. Migration `b46c9d8a210f` adds the account theme and gives existing users the orange-yellow default.
+
+`PATCH /auth/me` accepts `theme`: `orange-yellow`, `blue-yellow`, or `green-yellow`. `GET /auth/me` returns the saved choice.
+
+`DELETE /auth/me` requires a bearer token and JSON `{ "current_password": "..." }`. It permanently deletes the authenticated user and all linked diaries, notes (including trash), conversations/transcripts, and social drafts in one transaction. The email is available for a new verified registration, and the deleted user's tokens no longer authenticate.
+
+## Password recovery
+
+The sign-in page offers **Forgot password?**. `POST /auth/forgot-password` accepts an email and always returns the same 202 response for eligible, unknown, unverified, throttled, and delivery-failure cases. Eligible verified accounts receive a six-digit code via the existing Resend configuration. Delivery failures are logged without the address or code.
+
+`POST /auth/reset-password` accepts `email`, `code`, and `new_password` (12–128 characters). Reset codes are hashed, expire after 10 minutes, allow five attempts, and are replaced on resend. Requests are limited to one send per five minutes and five per hour per account, in addition to the existing IP limits. Success consumes the code and invalidates every prior session without changing diary content. Password changes and sign-out-all also invalidate outstanding reset codes.
+
+Run `alembic upgrade head` and restart the API. Real email recovery requires `RESEND_API_KEY` and `RESEND_FROM_EMAIL`; the isolated local preview has no mail sender configured.

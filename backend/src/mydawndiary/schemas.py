@@ -34,12 +34,24 @@ class EmailVerificationCode(EmailVerificationRequest):
     code: str = Field(pattern=r"^[0-9]{6}$")
 
 
+class PasswordReset(EmailVerificationCode):
+    new_password: str = Field(min_length=12, max_length=128)
+
+
 class PasswordChange(BaseModel):
     current_password: str
     new_password: str = Field(min_length=12, max_length=128)
 
 
+Theme = Literal["orange-yellow", "blue-yellow", "green-yellow"]
+
+
+class AccountDelete(BaseModel):
+    current_password: str = Field(min_length=1, max_length=128)
+
+
 class ProfilePatch(BaseModel):
+    theme: Theme | None = None
     display_name: str | None = Field(default=None, max_length=120)
     time_zone: str | None = None
 
@@ -62,6 +74,7 @@ class UserOut(BaseModel):
     email_verified_at: datetime | None
     display_name: str | None
     time_zone: str
+    theme: Theme
     created_at: datetime
 
 

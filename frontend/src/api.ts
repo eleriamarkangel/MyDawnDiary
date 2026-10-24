@@ -1,8 +1,11 @@
+export type Theme = "orange-yellow" | "blue-yellow" | "green-yellow";
+
 export interface User {
   id: string;
   email: string;
   display_name: string | null;
   time_zone: string;
+  theme: Theme;
 }
 
 export interface Note {

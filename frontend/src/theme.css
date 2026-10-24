@@ -26,3 +26,49 @@
   --color-focus: #b45c37;
   --color-danger: #a53232;
 }
+
+[data-theme="blue-yellow"] {
+  --dawn-cream: #f1f7fc;
+  --dawn-paper: #fafdff;
+  --dawn-peach: #dcecf9;
+  --dawn-coral: #3478a5;
+  --dawn-coral-hover: #265e85;
+  --dawn-border: #ccdfea;
+  --dawn-rule: rgba(52, 120, 165, .28);
+  --color-surface-soft: #eaf3fa;
+  --color-focus: #265e85;
+}
+
+[data-theme="green-yellow"] {
+  --dawn-cream: #f3f8ee;
+  --dawn-paper: #fcfef8;
+  --dawn-peach: #e0efd9;
+  --dawn-coral: #487b50;
+  --dawn-coral-hover: #325d39;
+  --dawn-border: #d2e1c8;
+  --dawn-rule: rgba(72, 123, 80, .28);
+  --color-surface-soft: #edf4e5;
+  --color-focus: #325d39;
+}
+
+/* Resolve semantic aliases on theme previews as well as the document root. */
+[data-theme] {
+  --color-page: var(--dawn-cream);
+  --color-surface: var(--dawn-paper);
+  --color-primary: var(--dawn-coral);
+  --color-primary-hover: var(--dawn-coral-hover);
+  --color-border: var(--dawn-border);
+  --color-paper-line: var(--dawn-rule);
+}
+
+[data-theme="orange-yellow"] {
+  --dawn-cream: #fff8ee;
+  --dawn-paper: #fffdf9;
+  --dawn-peach: #ffe6d7;
+  --dawn-coral: #c85439;
+  --dawn-coral-hover: #ad432c;
+  --dawn-border: #f0dfcf;
+  --dawn-rule: rgba(92, 158, 197, .38);
+  --color-surface-soft: #fff3e8;
+  --color-focus: #b45c37;
+}

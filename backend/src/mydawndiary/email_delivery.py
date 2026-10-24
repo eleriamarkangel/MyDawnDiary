@@ -12,19 +12,26 @@ class EmailDeliveryError(Exception):
 
 
 def send_verification_email(address: str, code: str) -> None:
+    _send_code_email(address, code, "Verify your MyDawnDiary email",
+                     "Your MyDawnDiary verification code is", "create an account")
+
+
+def send_password_reset_email(address: str, code: str) -> None:
+    _send_code_email(address, code, "Reset your MyDawnDiary password",
+                     "Your MyDawnDiary password reset code is", "request a password reset")
+
+
+def _send_code_email(address: str, code: str, subject: str, introduction: str, action: str) -> None:
     settings = get_settings()
     if not settings.resend_api_key or not settings.resend_from_email:
         raise EmailDeliveryError("Resend API key or sender address is missing")
-
     payload = {
         "from": settings.resend_from_email,
         "to": [address],
-        "subject": "Verify your MyDawnDiary email",
-        "html": (
-            "<p>Your MyDawnDiary verification code is "
-            f"<strong>{code}</strong>.</p><p>It expires in 10 minutes. "
-            "If you did not create an account, you can ignore this email.</p>"
-        ),
+        "subject": subject,
+        "html": (f"<p>{introduction} <strong>{code}</strong>.</p>"
+                 "<p>It expires in 10 minutes. Never share this code.</p>"
+                 f"<p>If you did not {action}, you can ignore this email.</p>"),
     }
     request = Request(
         "https://api.resend.com/emails",

@@ -29,7 +29,8 @@ def test_existing_accounts_are_verified_by_migration(tmp_path, monkeypatch):
 
     command.upgrade(config, "head")
     with engine.connect() as db:
-        row = db.execute(text("SELECT email_verified_at, email_otp_attempts FROM users WHERE id = 'old-user'")).one()
+        row = db.execute(text("SELECT email_verified_at, email_otp_attempts, theme FROM users WHERE id = 'old-user'")).one()
         assert row.email_verified_at is not None
         assert row.email_otp_attempts == 0
+        assert row.theme == "orange-yellow"
     engine.dispose()
